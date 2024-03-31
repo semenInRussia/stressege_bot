@@ -1,4 +1,4 @@
-# StressEge Telegram bot
+# 👌StressEge Telegram bot
 
 ![demo](demo.png)
 
