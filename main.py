@@ -69,7 +69,7 @@ async def suggest(msg: types.Message):
 def _remove_parens(s: str) -> str:
     if "(" not in s:
         return s
-    return s[s.find("(") - 1 :]
+    return s[:s.find("(") - 1]
 
 
 def _word_variants(word: str) -> Iterator[str]:
