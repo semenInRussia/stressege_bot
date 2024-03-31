@@ -61,6 +61,8 @@ async def suggest(msg: types.Message):
     kb = ReplyKeyboardBuilder()
     for nw in _word_variants(w):
         kb.button(text=nw)
+    sz = [1 for _ in range(len(list(kb.buttons)))]
+    kb.adjust(*sz)
     await msg.reply(f"<i>Слово</i>: {w.lower()}", reply_markup=kb.as_markup())
 
 
@@ -91,12 +93,11 @@ async def msg_handler(msg: types.Message) -> None:
         return
 
     choice = msg.text
+    right = prev[msg.from_user.id]
 
     if not choice:
         await msg.answer("Брат, никаких стикеров, только текст /play")
         return
-
-    right = prev[msg.from_user.id]
 
     if choice == right:
         score[msg.from_user.id] += 1
@@ -112,7 +113,8 @@ async def msg_handler(msg: types.Message) -> None:
 
 
 async def main() -> None:
-    # Initialize Bot instance with a default parse mode which will be passed to all API calls
+    # Initialize Bot instance with a default parse mode which will be passed to all API
+    # calls
     bot = Bot(TOKEN, parse_mode=ParseMode.HTML)
     # And the run events dispatching
     await dp.start_polling(bot)
