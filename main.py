@@ -110,6 +110,7 @@ async def msg_handler(msg: types.Message) -> None:
         f"🐈 Не Верно ({right} - правильный)\n\nВаш результат: {sc}\n\n /play"
     )
     del prev[msg.from_user.id]
+    del score[msg.from_user.id]
 
 
 async def main() -> None:
