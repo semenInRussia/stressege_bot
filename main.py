@@ -5,6 +5,7 @@ from collections.abc import Iterator
 from os import getenv
 
 from aiogram import Bot, Dispatcher, types
+from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.filters import Command, CommandStart
 from aiogram.types import Message
@@ -12,14 +13,13 @@ from aiogram.utils.keyboard import ReplyKeyboardBuilder
 from aiogram.utils.markdown import hbold
 
 # Bot token can be obtained via https://t.me/BotFather
-TOKEN = getenv("STRESS_BOT_TOKEN")
-assert TOKEN is not None
+TOKEN: str = getenv("STRESS_BOT_TOKEN") or ""
+assert TOKEN != ""
 
 # All handlers should be attached to the Router (or Dispatcher)
 dp = Dispatcher()
 
-
-with open("dict.txt") as f:
+with open("dict.txt", encoding="utf-8") as f:
     _dict = set((line.strip() for line in f))
 
 
@@ -40,8 +40,7 @@ async def command_start_handler(message: Message) -> None:
     await message.answer(
         f"Даров, {hbold(message.from_user.full_name)}!\n\n"
         "Я бот, созданный Семёном для того, чтобы ты выучил ударения!"
-        "Нажми /play для начала игры"
-    )
+        "Нажми /play для начала игры")
 
 
 @dp.message(Command("play"))
@@ -49,7 +48,7 @@ async def play_handler(msg: types.Message):
     if not msg.from_user:
         return
     score[msg.from_user.id] = 0
-    await msg.answer("Начинаем игру!")
+    await msg.reply("Начинаем игру!")
     await suggest(msg)
 
 
@@ -76,7 +75,12 @@ def _word_variants(word: str) -> Iterator[str]:
     word = word.lower()
     for i in range(len(word)):
         if word[i] in VOWELS:
-            yield word[:i] + word[i].upper() + word[i + 1 :]
+            yield word[:i] + word[i].upper() + word[i + 1:]
+
+
+@dp.message(Command("/quiz"))
+async def quiz() -> None:
+    pass
 
 
 score = {}
@@ -89,26 +93,25 @@ async def msg_handler(msg: types.Message) -> None:
         return
 
     if msg.from_user.id not in score:
-        await msg.answer("Начни игру, брат, /play")
+        await msg.reply("Начни игру, брат, /play")
         return
 
     choice = msg.text
     right = prev[msg.from_user.id]
 
     if not choice:
-        await msg.answer("Брат, никаких стикеров, только текст /play")
+        await msg.reply("Брат, никаких стикеров, только текст /play")
         return
 
     if choice == right:
         score[msg.from_user.id] += 1
-        await msg.answer("🤝 Верно")
+        await msg.reply("🤝 Верно")
         await suggest(msg)
         return
 
     sc = score[msg.from_user.id]
-    await msg.answer(
-        f"🐈 Не Верно ({right} - правильный)\n\nВаш результат: {sc}\n\n /play"
-    )
+    await msg.reply(
+        f"🐈 Не Верно ({right} - правильный)\n\nВаш результат: {sc}\n\n /play")
     del prev[msg.from_user.id]
     del score[msg.from_user.id]
 
@@ -116,7 +119,7 @@ async def msg_handler(msg: types.Message) -> None:
 async def main() -> None:
     # Initialize Bot instance with a default parse mode which will be passed to all API
     # calls
-    bot = Bot(TOKEN, parse_mode=ParseMode.HTML)
+    bot = Bot(TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     # And the run events dispatching
     await dp.start_polling(bot)
 
