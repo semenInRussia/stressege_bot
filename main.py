@@ -43,6 +43,37 @@ async def command_start_handler(message: Message) -> None:
         "Нажми /play для начала игры")
 
 
+def _remove_parens(s: str) -> str:
+    if "(" not in s:
+        return s
+    return s[:s.find("(") - 1]
+
+
+def _word_variants(word: str) -> Iterator[str]:
+    word = word.lower()
+    for i in range(len(word)):
+        if word[i] in VOWELS:
+            yield word[:i] + word[i].upper() + word[i + 1:]
+
+
+@dp.message(Command("quiz"))
+async def quiz(msg: types.Message) -> None:
+    right = next(wrds)
+    choices = list(_word_variants(right))
+    correct = choices.index(right)
+    print("correct is ", correct)
+    await msg.reply_poll(
+        "А как правильно?",
+        choices,  # type: ignore
+        correct_option_id=correct,
+        type="quiz",
+        is_anonymous=False)
+
+
+score = {}
+prev = {}
+
+
 @dp.message(Command("play"))
 async def play_handler(msg: types.Message):
     if not msg.from_user:
@@ -63,28 +94,6 @@ async def suggest(msg: types.Message):
     sz = [1 for _ in range(len(list(kb.buttons)))]
     kb.adjust(*sz)
     await msg.reply(f"<i>Слово</i>: {w.lower()}", reply_markup=kb.as_markup())
-
-
-def _remove_parens(s: str) -> str:
-    if "(" not in s:
-        return s
-    return s[:s.find("(") - 1]
-
-
-def _word_variants(word: str) -> Iterator[str]:
-    word = word.lower()
-    for i in range(len(word)):
-        if word[i] in VOWELS:
-            yield word[:i] + word[i].upper() + word[i + 1:]
-
-
-@dp.message(Command("/quiz"))
-async def quiz() -> None:
-    pass
-
-
-score = {}
-prev = {}
 
 
 @dp.message()
@@ -111,7 +120,8 @@ async def msg_handler(msg: types.Message) -> None:
 
     sc = score[msg.from_user.id]
     await msg.reply(
-        f"🐈 Не Верно ({right} - правильный)\n\nВаш результат: {sc}\n\n /play")
+        f"🐈 Не Верно ({right} - правильный)\n\nВаш результат: {sc}\n\n /play",
+        reply_markup=types.ReplyKeyboardRemove())
     del prev[msg.from_user.id]
     del score[msg.from_user.id]
 
