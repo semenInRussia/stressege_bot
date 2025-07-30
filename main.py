@@ -61,7 +61,6 @@ async def quiz(msg: types.Message) -> None:
     right = next(wrds)
     choices = list(_word_variants(right))
     correct = choices.index(right)
-    print("correct is ", correct)
     await msg.reply_poll(
         "А как правильно?",
         choices,  # type: ignore
